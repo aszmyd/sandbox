@@ -1,1 +1,27 @@
-pages
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button onclick="Capture()" style="font-size: 50px">Capture</button>
+<video id="sth"></video>
+<script>
+    var video = document.getElementById('sth');
+    window.Capture = function() {
+        navigator.mediaDevices.getUserMedia({video: true}, onSuccess, onError).then(onSuccess).catch(onError);
+
+        function onSuccess(stream) {
+            console.log('success', stream);
+            video.srcObject = stream;
+            video.play();
+        }
+
+        function onError(error) {
+            console.error(error);
+        }
+    }
+</script>
+</body>
+</html>
