@@ -6,7 +6,8 @@
 </head>
 <body>
 <button onclick="Capture()" style="font-size: 50px">Capture</button>
-<video id="sth" muted controls></video>
+<button onclick="Play()" style="font-size: 50px">Play</button>
+<video id="sth" muted autoplay controls></video>
 <script>
     var video = document.getElementById('sth');
     window.Capture = function() {
@@ -21,6 +22,9 @@
         function onError(error) {
             console.error(error);
         }
+    };
+    window.Play = function() {
+        video.play();
     }
 </script>
 </body>
