@@ -17,6 +17,11 @@
             console.log('success', stream);
             video.srcObject = stream;
             // video.play();
+
+            setTimeout(function() {
+                console.log('play!!!');
+                video.play();
+            }, 3000);
         }
 
         function onError(error) {
