@@ -7,6 +7,7 @@
 <body>
 <button onclick="Capture()" style="font-size: 50px">Capture</button>
 <button onclick="Play()" style="font-size: 50px">Play</button>
+<button onclick="Detect()" style="font-size: 50px">Detect</button>
 <video id="sth" playsinline webkit-playsinline></video>
 <script>
     var video = document.getElementById('sth');
@@ -30,6 +31,21 @@
     };
     window.Play = function() {
         video.play();
+    };
+    window.Detect = function() {
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        const isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
+        alert(navigator.userAgent + ' => isChrome: ' + isChrome + ', isAndroid: ' + isAndroid);
+        if (isAndroid && isChrome) {
+            const chromeVersionMatch = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+
+            alert(' chromeVersionMatch: ' + chromeVersionMatch );
+            if (chromeVersionMatch) {
+                alert(' parseInt(chromeVersionMatch[2], 10): ' + parseInt(chromeVersionMatch[2], 10) );
+                return parseInt(chromeVersionMatch[2], 10) <= 65;
+            }
+        }
+        return false;
     }
 </script>
 </body>
