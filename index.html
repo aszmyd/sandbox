@@ -5,13 +5,14 @@
     <title>Title</title>
 </head>
 <body>
+<h1>VIDEO</h1>
 <button onclick="Capture()" style="font-size: 50px">Capture</button>
 <button onclick="Play()" style="font-size: 50px">Play</button>
 <button onclick="Detect()" style="font-size: 50px">Detect</button>
 <video id="sth" playsinline webkit-playsinline></video>
 <script>
     var video = document.getElementById('sth');
-    window.Capture = function() {
+    window.Capture = function () {
         navigator.mediaDevices.getUserMedia({video: true}, onSuccess, onError).then(onSuccess).catch(onError);
 
         function onSuccess(stream) {
@@ -19,7 +20,7 @@
             video.srcObject = stream;
             // video.play();
 
-            setTimeout(function() {
+            setTimeout(function () {
                 console.log('play!!!');
                 video.play();
             }, 3000);
@@ -29,24 +30,33 @@
             console.error(error);
         }
     };
-    window.Play = function() {
+    window.Play = function () {
         video.play();
     };
-    window.Detect = function() {
+    window.Detect = function () {
         const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
         const isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
         alert(navigator.userAgent + ' => isChrome: ' + isChrome + ', isAndroid: ' + isAndroid);
         if (isAndroid && isChrome) {
             const chromeVersionMatch = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
 
-            alert(' chromeVersionMatch: ' + chromeVersionMatch );
+            alert(' chromeVersionMatch: ' + chromeVersionMatch);
             if (chromeVersionMatch) {
-                alert(' parseInt(chromeVersionMatch[2], 10): ' + parseInt(chromeVersionMatch[2], 10) );
+                alert(' parseInt(chromeVersionMatch[2], 10): ' + parseInt(chromeVersionMatch[2], 10));
                 return parseInt(chromeVersionMatch[2], 10) <= 65;
             }
         }
         return false;
     }
 </script>
+
+<hr/>
+<h1>Widget</h1>
+
+<iframe src="https://8eo.github.io/sandbox/iframe.html"
+        allow="geolocation; microphone; camera"
+        style="border: 1px solid red; width: 100px; height: 100px;"></iframe>
+
+
 </body>
 </html>
