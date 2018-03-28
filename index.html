@@ -57,6 +57,19 @@
         allow="geolocation; microphone; camera"
         style="border: 1px solid red; width: 100px; height: 100px;"></iframe>
 
+<button onclick="Run">Run</button>
+<!-- Horn Widget -->
+<script type='text/javascript' src='https://dev.horn.co/widget/manager.js'></script>
 
+<script>
+    window.Run = function() {
+        (function(){co.horn.widget.run({
+            channel: '3271e8d8-6d81-478e-b6c1-3191d2fb3a1a',
+            audio: {
+                container: 'popup'
+            }
+        })})()
+    }
+</script>
 </body>
 </html>
