@@ -38,12 +38,12 @@
             ctx.beginPath();
             ctx.fillRect(90, 340, 180, event.gamma);
 
-            orientationText.innerText = getOrientation(Math.round(event.beta), Math.round(event.gamma))
+            orientationText.innerText = getOrientation(event.gamma);
         }
 
-        function getOrientation(betaRotation, gammaRotation) {
-            const offset = 45;
-            if (gammaRotation >= 90 - offset && gammaRotation <= 90 + offset) {
+        function getOrientation(gammaRotation) {
+            const gammaAbsoluteMax = 90;
+            if (Math.abs(gammaRotation) <= gammaAbsoluteMax / 2) {
                 return 'portrait';
             } else {
                 return 'landscape';
