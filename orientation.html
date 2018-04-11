@@ -6,11 +6,14 @@
 <body>
 <canvas id="myCanvas" width="360" height="450" style="border:1px solid #d3d3d3;">
 </canvas>
+<hr />
+<h3>Orientation: <span id="orientation"></span></h3>
 <script>
     if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", deviceOrientationListener);
 
         var c = document.getElementById("myCanvas");
+        var orientationText = document.getElementById("orientation");
         var ctx = c.getContext("2d");
 
         function deviceOrientationListener(event) {
@@ -34,6 +37,17 @@
             ctx.fillText("Gamma: " + Math.round(event.gamma), 10, 270);
             ctx.beginPath();
             ctx.fillRect(90, 340, 180, event.gamma);
+
+            orientationText.innerText = getOrientation(Math.round(event.beta), Math.round(event.gamma))
+        }
+
+        function getOrientation(betaRotation, gammaRotation) {
+            const offset = 45;
+            if (gammaRotation >= 90 - offset && gammaRotation <= 90 + offset) {
+                return 'portrait';
+            } else {
+                return 'landscape';
+            }
         }
 
     } else {
