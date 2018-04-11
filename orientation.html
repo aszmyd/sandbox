@@ -42,8 +42,8 @@
         }
 
         function getOrientation(betaRotation, gammaRotation) {
-            const gammaAbsoluteMax = 90;
-            if (Math.abs(gammaRotation) <= gammaAbsoluteMax / 2) {
+            const offset = 45;
+            if (gammaRotation >= 90 - offset && gammaRotation <= 90 + offset) {
                 return 'portrait';
             } else {
                 return 'landscape';
