@@ -2,45 +2,19 @@
 <html>
 <head>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width, viewport-fit=cover">
-    <style type="text/css">
-        video {
-            border: 1px solid red;
-        }
-    </style>
 </head>
 <body>
-<button onclick="play()">Play2</button>
-<button onclick="fullscreen()">Fullscreen</button>
-<hr />
-<video src="SampleVideo_720x480_30mb.mp4" id="video"></video>
-<script>
-    window.play = function() {
-        document.getElementById('video').play();
-    };
-    window.fullscreen = function() {
-        enableDomElementFullScreen('video');
-    };
 
-    function enableDomElementFullScreen(elementId) {
-        var domElement = document.getElementById(elementId);
-        var fullScreenMethods = [
-            'requestFullscreen',
-            'webkitRequestFullScreen',
-            'webkitEnterFullscreen', // iOS Safari
-            'mozRequestFullScreen',
-            'msRequestFullScreen'
-        ];
-        var isDisplayingFullScreen = false;
-
-        fullScreenMethods.forEach(function(functionName) {
-            if (domElement[functionName]) {
-            domElement[functionName]();
-            isDisplayingFullScreen = document.fullscreenElement !== null;
-        }
-    });
-        return isDisplayingFullScreen;
+<!-- Horn Widget -->
+<script type='text/javascript' src='https://dev.horn.co/widget/manager.js'></script>
+<script>(function(){co.horn.widget.run({
+    channel: '3271e8d8-6d81-478e-b6c1-3191d2fb3a1a',
+    audio: false,
+    video: {
+        enabled: true,
+        height: '200px'
     }
+})})()</script>
 
-</script>
 </body>
 </html>
