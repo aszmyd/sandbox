@@ -6,13 +6,16 @@
 </head>
 <body>
 <!-- Horn Widget -->
-<script type='text/javascript' src='https://horn.co/widget/manager.js'></script>
+<script type='text/javascript' src='https://dev.horn.co/widget/manager.js'></script>
 
 <script>
     (function () {
         co.horn.widget.run({
             channel: '3271e8d8-6d81-478e-b6c1-3191d2fb3a1a',
-            combined: true
+            combined: {
+                enabled: true,
+                modes: ['audio', 'video']
+            }
         })
     })()
 </script>
