@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<button onclick="startSender()">
+    Start sender
+</button>
+
+<button onclick="setReceiverAnswer()">
+    Set receiver answer
+</button>
+
+<button onclick="startReceiver()">
+    Start receiver
+</button>
+
+<hr/>
+
+<table border="1" style="width: 100%; height: 300px;">
+    <thead>
+    <tr>
+        <th width="50px"></th>
+        <th>
+            Local
+        </th>
+        <th>
+            Remote
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            SDP
+        </td>
+        <td>
+            <textarea style="width: 100%; height: 100%" id="local-sdp">
+
+            </textarea>
+        </td>
+        <td>
+            <textarea style="width: 100%; height: 100%" id="remote-sdp">
+
+            </textarea>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Video
+        </td>
+        <td>
+            <video style="width: 300px; height: 300px;" id="local-video"></video>
+        </td>
+        <td>
+            <video style="width: 300px; height: 300px;" id="remote-video"></video>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    let conn;
+    let isSender;
+    let localSDPElement = document.getElementById('local-sdp');
+    let remoteSDPElement = document.getElementById('remote-sdp');
+
+    let localVideoElement = document.getElementById('local-video');
+    let remoteVideoElement = document.getElementById('remote-video');
+
+    window.startSender = () => {
+        isSender = true;
+        conn = new RTCPeerConnection();
+
+        navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
+            console.log('got local stream', stream);
+            conn.addStream(stream);
+            localVideoElement.srcObject = stream;
+            localVideoElement.play();
+
+            generateLocalSDP();
+        });
+
+    };
+
+    window.setReceiverAnswer = () => {
+        setRemoteSDP(true);
+    };
+
+
+    window.startReceiver = () => {
+        isSender = false;
+        conn = new RTCPeerConnection();
+
+        conn.addEventListener('addstream', (e) => {
+            console.log('got remote stream', e.stream);
+            console.log(remoteVideoElement);
+            remoteVideoElement.srcObject = e.stream;
+            remoteVideoElement.play();
+        });
+
+        setRemoteSDP();
+    };
+
+    window.generateLocalSDP = () => {
+        conn.createOffer().then((offer) => {
+            console.log('generated SDP', offer);
+            localSDPElement.innerText = offer.sdp;
+            conn.setLocalDescription(offer);
+        })
+    };
+    window.setRemoteSDP = (isAnswer) => {
+        const sdp = remoteSDPElement.value;
+        const desc = new RTCSessionDescription({
+            type: isAnswer ? 'answer' : 'offer',
+            sdp: sdp
+        });
+        console.log(desc);
+        conn.setRemoteDescription(desc).then(() => {
+            console.log('setted remote SDP');
+            if (!isSender) {
+                conn.createAnswer().then((answer) => {
+                    console.log('generated answer', answer);
+                    localSDPElement.innerText = answer.sdp;
+                    conn.setLocalDescription(answer);
+                })
+            }
+
+        })
+    };
+
+</script>
+
+</body>
+</html>
