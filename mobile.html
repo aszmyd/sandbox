@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<button onclick="connect()">Connect</button>
+
+<script>
+    let ws;
+    let counter = 1;
+
+    const send = () => {
+        ws.send(`[${new Date()}] test ${counter++}`);
+    };
+
+    window.connect= () => {
+        ws = new WebSocket('ws://192.168.50.17:8080', 'echo-protocol');
+
+        ws.addEventListener('open', () => {
+            setInterval(() => {
+                send();
+            }, 1000);
+
+        });
+
+        ws.addEventListener('message', (event) => {
+            console.log('got msg', event);
+        });
+
+    }
+</script>
+</body>
+</html>
