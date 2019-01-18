@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <button onclick="checkPermissions()">Check permissions</button>
+    <p>Current Permissions: <strong id="permission">---</strong></p>
+
+    <button onclick="askForPermission()">Ask for permissions</button>
+    <p>Current Stream ID: <strong id="stream-id">---</strong></p>
+
+    <script>
+      let permissionElement = document.getElementById('permission');
+      let stramIdElement = document.getElementById('stream-id');
+      checkPermissions = () => {
+          navigator.permissions.query({name:'microphone'}).then((status) => {
+              permissionElement.innerText = status.state;
+          }).catch((error) => {
+              console.error(error);
+          });
+      }
+      askForPermission = () => {
+          navigator.mediaDevices.getUserMedia({audio: true}).then((stream) => {
+              stramIdElement.innerText = stream.id;
+              checkPermissions();
+          }).catch((error) => {
+              console.error(error);
+          });
+      }
+    </script>
+</body>
+</html>
