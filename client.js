@@ -54,7 +54,7 @@
             navigator.serviceWorker.register('sw.js').then((response) => {
                 // Service worker registration done
                 console.log('Registration Successful', response);
-                fetch("/initialize");
+                fetch("initialize");
             }).catch((error) => {
                 // Service worker registration failed
                 console.log('Registration Failed', error);
