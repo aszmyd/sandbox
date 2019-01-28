@@ -8,7 +8,7 @@ self.addEventListener("fetch", event => {
         const sendRequest = () => {
             keepAliveCounter++;
             console.log('SEND ' + keepAliveCounter);
-            fetch(`https://192.168.50.14:8080/rest`);
+            fetch(`https://dev.horn.co/api/v1_0/version`);
         };
 
         sendRequest();
