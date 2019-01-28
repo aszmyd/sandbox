@@ -1,6 +1,6 @@
 self.addEventListener("fetch", event => {
     let url = new URL(event.request.url);
-    if (url.pathname.startsWith("/initialize")) {
+    if (url.pathname.indexOf("initialize") !== -1) {
         console.log('handle test');
         event.respondWith(new Response("Starting test..."));
 
