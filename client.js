@@ -48,13 +48,12 @@
         }, 1000)
     };
 
-    const startServiceWorkerTest = () => {
+    const registerServiceWorker = () => {
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then((response) => {
                 // Service worker registration done
                 console.log('Registration Successful', response);
-                fetch("initialize");
             }).catch((error) => {
                 // Service worker registration failed
                 console.log('Registration Failed', error);
@@ -64,8 +63,31 @@
         }
     };
 
+    const deRegisterServiceWorker = () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                for (let registration of registrations) {
+                    console.log('deregister', registration);
+                    registration.unregister();
+
+                }
+            });
+        }
+    };
+
+    const checkServiceWorker = () => {
+        fetch("test-once");
+    };
+
+    const startServiceWorkerTest = () => {
+        fetch("make-tests");
+    };
+
     root.connectWebSocket = connectWebSocket;
     root.startRestTest = startRestTest;
+    root.registerServiceWorker = registerServiceWorker;
+    root.deRegisterServiceWorker = deRegisterServiceWorker;
+    root.checkServiceWorker = checkServiceWorker;
     root.startServiceWorkerTest = startServiceWorkerTest;
 
 
