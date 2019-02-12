@@ -1,0 +1,24 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<audio src="http://213.251.190.165/pulsHD.mp3" controls></audio>
+<audio id="mic" controls></audio>
+
+<button onclick="srcObjectTest()">srcObject Test</button>
+
+<script>
+    srcObjectTest = () => {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+            document.getElementById('mic').srcObject = stream;
+            document.getElementById('mic').play();
+        });
+    }
+</script>
+</body>
+</html>
