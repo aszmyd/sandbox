@@ -3,135 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
 </head>
 <body>
 
-<button onclick="startSender()">
-    Start sender
-</button>
-
-<button onclick="setReceiverAnswer()">
-    Set receiver answer
-</button>
-
-<button onclick="startReceiver()">
-    Start receiver
-</button>
-
-<hr/>
-
-<table border="1" style="width: 100%; height: 300px;">
+<button onclick="run()">RUN</button>
+<table>
     <thead>
     <tr>
-        <th width="50px"></th>
-        <th>
-            Local
-        </th>
-        <th>
-            Remote
-        </th>
+        <th>&nbsp;</th>
+        <th>Local</th>
+        <th>Remote</th>
     </tr>
     </thead>
     <tbody>
     <tr>
+        <td>SDP</td>
         <td>
-            SDP
+            <textarea id="localSDP"></textarea>
+            <br/>
+            <button onclick="generateLocalSDP()">Generate</button>
         </td>
         <td>
-            <textarea style="width: 100%; height: 100%" id="local-sdp">
-
-            </textarea>
-        </td>
-        <td>
-            <textarea style="width: 100%; height: 100%" id="remote-sdp">
-
-            </textarea>
+            <textarea id="remoteSDP"></textarea>
+            <br/>
+            <button onclick="setRemoteSDP()">SET</button>
         </td>
     </tr>
     <tr>
+        <td>CANDIDATE</td>
         <td>
-            Video
+            <textarea id="localCandidate"></textarea>
         </td>
         <td>
-            <video style="width: 300px; height: 300px;" id="local-video"></video>
-        </td>
-        <td>
-            <video style="width: 300px; height: 300px;" id="remote-video"></video>
+            <textarea id="remoteCandidate"></textarea>
+            <br/>
+            <button onclick="setRemoteCandidate()">SET</button>
         </td>
     </tr>
     </tbody>
 </table>
-
 <script>
-    let conn;
-    let isSender;
-    let localSDPElement = document.getElementById('local-sdp');
-    let remoteSDPElement = document.getElementById('remote-sdp');
+    const localSDP = document.querySelector('#localSDP');
+    const localCandidate = document.querySelector('#localCandidate');
+    const remoteSDP = document.querySelector('#remoteSDP');
+    const remoteCandidate = document.querySelector('#remoteCandidate');
+    let localStream;
+    let pc;
+    let wasInitializing = false;
 
-    let localVideoElement = document.getElementById('local-video');
-    let remoteVideoElement = document.getElementById('remote-video');
-
-    window.startSender = () => {
-        isSender = true;
-        conn = new RTCPeerConnection();
-
-        navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
-            console.log('got local stream', stream);
-            conn.addStream(stream);
-            localVideoElement.srcObject = stream;
-            localVideoElement.play();
-
-            generateLocalSDP();
-        });
-
-    };
-
-    window.setReceiverAnswer = () => {
-        setRemoteSDP(true);
-    };
-
-
-    window.startReceiver = () => {
-        isSender = false;
-        conn = new RTCPeerConnection();
-
-        conn.addEventListener('addstream', (e) => {
-            console.log('got remote stream', e.stream);
-            console.log(remoteVideoElement);
-            remoteVideoElement.srcObject = e.stream;
-            remoteVideoElement.play();
-        });
-
-        setRemoteSDP();
-    };
-
-    window.generateLocalSDP = () => {
-        conn.createOffer().then((offer) => {
-            console.log('generated SDP', offer);
-            localSDPElement.innerText = offer.sdp;
-            conn.setLocalDescription(offer);
+    run = () => {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(s => {
+            localStream = s;
+            pc = new RTCPeerConnection({
+                iceServers: [{
+                    urls: 'stun:stun.l.google.com:19302' // Google's public STUN server
+                }]
+            });
+            pc.addStream(localStream);
+            pc.onaddtrack = (e) => {
+                console.log('got track', e);
+            };
+            pc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    localCandidate.innerText = JSON.stringify(e.candidate);
+                }
+            }
         })
     };
-    window.setRemoteSDP = (isAnswer) => {
-        const sdp = remoteSDPElement.value;
-        const desc = new RTCSessionDescription({
-            type: isAnswer ? 'answer' : 'offer',
-            sdp: sdp
-        });
-        console.log(desc);
-        conn.setRemoteDescription(desc).then(() => {
-            console.log('setted remote SDP');
-            if (!isSender) {
-                conn.createAnswer().then((answer) => {
-                    console.log('generated answer', answer);
-                    localSDPElement.innerText = answer.sdp;
-                    conn.setLocalDescription(answer);
+    generateLocalSDP = () => {
+        wasInitializing = true;
+        pc.createOffer().then((offer) => {
+            localSDP.innerText = JSON.stringify(offer);
+            pc.setLocalDescription(offer);
+        })
+    };
+    setRemoteSDP = () => {
+        const remote = JSON.parse(remoteSDP.value);
+        pc.setRemoteDescription(remote).then(() => {
+            if (!wasInitializing) {
+                pc.createAnswer().then(answer => {
+                    localSDP.innerHTML = JSON.stringify(answer);
+                    pc.setLocalDescription(answer);
                 })
             }
-
         })
-    };
-
+    }
+    setRemoteCandidate = () => {
+        const remote = JSON.parse(remoteCandidate.value);
+        pc.addIceCandidate(remote).then(() => {
+            console.log('added');
+        })
+    }
 </script>
 
 </body>
