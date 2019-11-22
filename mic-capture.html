@@ -1,0 +1,70 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<button style="font-size: 100px;" onclick="run()">Test mic</button>
+<script>
+    let stream, track, currentMicLevel, lockTime;
+    run = async () => {
+        stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        track = stream.getTracks()[0];
+
+        window.addEventListener("focus", () => console.log("PHONE UNLOCKED"));
+        window.addEventListener("blur", () => {
+            lockTime = Date.now();
+            console.log("PHONE LOCKED")
+        });
+
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const processor = context.createScriptProcessor(8192, 1, 1);
+        const analyzer = context.createAnalyser();
+
+        analyzer.smoothingTimeConstant = 0.3;
+        analyzer.fftSize = 1024;
+
+        source.connect(analyzer);
+        analyzer.connect(processor);
+        processor.connect(context.destination);
+
+        const processAudio = () => {
+            const array = new Uint8Array(analyzer.frequencyBinCount);
+            analyzer.getByteFrequencyData(array);
+            let values = 0;
+
+            const length = array.length;
+            for (let i = 0; i < length; i++) {
+                values += array[i];
+            }
+
+            currentMicLevel = values / length;
+        };
+        processor.addEventListener('audioprocess', processAudio);
+
+        setInterval(debug, 1000)
+
+    };
+    debug = () => {
+
+        console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify({
+            stream: {
+                active: stream.active
+            },
+            track: {
+                enabled: track.enabled,
+                active: track.active,
+                readyState: track.readyState
+            },
+            micLevel: currentMicLevel
+        }));
+    }
+</script>
+</body>
+</html>
