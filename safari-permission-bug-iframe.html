@@ -6,15 +6,16 @@
             height: 100%;
             margin: 0;
         }
+
         button {
             font-size: 20px;
         }
     </style>
 </head>
 <body>
-<button onclick="capture()">Ask from inside</button>
-<button onclick="enumerate()">Enumerate from inside</button>
-<button onclick="clean()">Clean</button>
+<button onclick="capture()" style="background: greenyellow">Ask from inside</button>
+<button onclick="enumerate()" style="background: yellow">Enumerate from outside</button>
+<button onclick="clean()" style="background: red">Clean</button>
 <script>
     let stream = null;
     capture = async () => {
