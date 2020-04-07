@@ -1,0 +1,26 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        button {
+            font-size: 20px;
+        }
+
+        iframe {
+            border: 2px solid green;
+        }
+    </style>
+</head>
+<body>
+<button onclick="navigator.mediaDevices.getUserMedia({video: true})">Ask from outside iframe</button>
+<button onclick="enumerate()">Enumerate from outside iframe</button>
+<hr/>
+<iframe src="safari-permission-bug-iframe.html" allow="camera"></iframe>
+<script>
+    enumerate = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        alert(`Devices: ${devices.map(d => d.label).join(',')}`)
+    }
+</script>
+</body>
+</html>
