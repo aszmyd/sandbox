@@ -12,13 +12,24 @@
     </style>
 </head>
 <body>
-<button onclick="navigator.mediaDevices.getUserMedia({video: true})">Ask from inside iframe</button>
-<button onclick="enumerate()">Enumerate from outside iframe</button>
+<button onclick="capture()">Ask from inside</button>
+<button onclick="enumerate()">Enumerate from inside</button>
+<button onclick="clean()">Clean</button>
 <script>
+    let stream = null;
+    capture = async () => {
+        stream = await navigator.mediaDevices.getUserMedia({video: true});
+    };
     enumerate = async () => {
         const devices = await navigator.mediaDevices.enumerateDevices();
         alert(`Devices: ${devices.map(d => d.label).join(',')}`)
-    }
+    };
+    clean = async () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    };
 </script>
 </body>
 </html>
