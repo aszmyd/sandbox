@@ -18,7 +18,12 @@
 <video muted id="vid" controls></video>
 
 <hr/>
-<iframe src="test3-iframe.html" allow="geolocation; microphone; camera; midi; autoplay; fullscreen; display-capture"></iframe>
+<iframe src="test3-iframe.html"
+        style="
+    width: 300px;
+    height: 300px;
+"
+        allow="geolocation; microphone; camera; midi; autoplay; fullscreen; display-capture"></iframe>
 <script>
     let stream = null;
     let vid = document.getElementById('vid')
