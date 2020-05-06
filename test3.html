@@ -15,12 +15,16 @@
 <button onclick="capture()" style="background: greenyellow">Ask from outside</button>
 <button onclick="enumerate()" style="background: yellow">Enumerate from outside</button>
 <button onclick="clean()" style="background: red">Clean</button>
+<video muted id="vid" controls />
+
 <hr/>
 <iframe src="test3-iframe.html" allow="geolocation; microphone; camera; midi; autoplay; fullscreen; display-capture"></iframe>
 <script>
     let stream = null;
+    let vid = document.getElementById('vid')
     capture = async () => {
         stream = await navigator.mediaDevices.getUserMedia({video: true});
+        vid.srcObject = stream
     };
     enumerate = async () => {
         const devices = await navigator.mediaDevices.enumerateDevices();
