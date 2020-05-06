@@ -1,0 +1,37 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        button {
+            font-size: 20px;
+        }
+
+        iframe {
+            border: 2px solid green;
+        }
+    </style>
+</head>
+<body>
+<button onclick="capture()" style="background: greenyellow">Ask from outside</button>
+<button onclick="enumerate()" style="background: yellow">Enumerate from outside</button>
+<button onclick="clean()" style="background: red">Clean</button>
+<hr/>
+<!--<iframe src="safari-permission-bug-iframe.html" allow="camera"></iframe>-->
+<script>
+    let stream = null;
+    capture = async () => {
+        stream = await navigator.mediaDevices.getUserMedia({video: true});
+    };
+    enumerate = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        alert(`Devices: ${devices.map(d => d.label).join(',')}`)
+    };
+    clean = async () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    };
+</script>
+</body>
+</html>
