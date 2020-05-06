@@ -13,19 +13,26 @@
     </style>
 </head>
 <body>
-<button onclick="capture()" style="background: greenyellow">Ask from inside</button>
-<button onclick="enumerate()" style="background: yellow">Enumerate from outside</button>
+<button onclick="capture1()" style="background: greenyellow">Capture Front</button>
+<button onclick="capture2()" style="background: greenyellow">Capture Back</button>
 <button onclick="clean()" style="background: red">Clean</button>
-<video muted id="vid" controls playsinline  style="width: 50px; height: 50px" ></video>
+front:<br />
+<video muted id="vid1" controls playsinline  style="width: 150px; height: 100px" ></video>
+<hr />
+back:<br />
+<video muted id="vid2" controls playsinline  style="width: 150px; height: 100px" ></video>
 
 <script>
     let stream = null;
-    let vid = document.getElementById('vid')
-    capture = async () => {
-        stream = await navigator.mediaDevices.getUserMedia({video: true});
-        vid.srcObject = stream
+    let vid1 = document.getElementById('vid1')
+    let vid2 = document.getElementById('vid2')
+    capture1 = async () => {
+        vid1.srcObject = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: '8960F59D358FFF593187F523EC41D8EB2EF0BDD6'}}});
+        vid1.play();
     };
-    enumerate = async () => {
+    capture2 = async () => {
+        vid2.srcObject = await navigator.mediaDevices.getUserMedia({video: {deviceId: {exact: '76DB95370CB449CAB76FE966DF121A64313CC87B'}}});
+        vid2.play();
     };
     clean = async () => {
         if (stream) {
