@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<button onclick="start()">Start sharing</button>
+<p>Immediate check: <span id="immediate">---</span></p>
+<p>Check delayed by 100ms: <span id="delayed">---</span></p>
+<script>
+    start = () => {
+        navigator.mediaDevices.getDisplayMedia()
+            .then(str => {
+                document.getElementById('immediate').innerText =
+                    `${str.getTracks()[0].getSettings().width}x${str.getTracks()[0].getSettings().height}px`;
+                window.setTimeout(() => {
+                    document.getElementById('delayed').innerText =
+                        `${str.getTracks()[0].getSettings().width}x${str.getTracks()[0].getSettings().height}px`;
+                }, 100)
+            });
+    }
+</script>
+</body>
+</html>
