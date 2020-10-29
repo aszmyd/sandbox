@@ -4,12 +4,19 @@
 </head>
 <body>
 
+<button onclick="start()">START</button>
+
 <iframe src="sender.html" id="sender"></iframe>
 <iframe src="receiver.html" id="receiver"></iframe>
 
 <script>
-    const senderFrame = document.getElementById('sender').contentWindow;
-    const receiverFrame = document.getElementById('receiver').contentWindow;
+    const senderFrame = document.createElement("iframe");
+    senderFrame.src = "sender.html";
+
+    const receiverFrame = document.createElement("iframe");
+    senderFrame.src = "receiver.html";
+
+    let senderWindow, receiverWindow;
     let senderData = []
     let receiverData = []
 
@@ -24,7 +31,7 @@
         link.text = 'GET LOGS'
         link.style.fontSize = '40px'
         link.target = '_blank';
-        link.href = URL.createObjectURL(new Blob([logs.join("\n")], {type : 'plain/text'}))
+        link.href = URL.createObjectURL(new Blob([logs.join("\n")], {type: 'plain/text'}))
         document.body.append(link);
     }
 
@@ -33,7 +40,7 @@
             new Promise((resolve) => {
                 const listener = (data) => {
                     const d = JSON.parse(data.data)
-                    if(d.source === "sender" && d.data.action === "result")  {
+                    if (d.source === "sender" && d.data.action === "result") {
                         senderData = JSON.parse(d.data.data);
                         receiverFrame.postMessage(JSON.stringify({command: 'getResult'}))
                         resolve();
@@ -45,7 +52,7 @@
             new Promise((resolve) => {
                 const listener = (data) => {
                     const d = JSON.parse(data.data)
-                    if(d.source === "receiver" && d.data.action === "result")  {
+                    if (d.source === "receiver" && d.data.action === "result") {
                         receiverData = JSON.parse(d.data.data);
                         resolve();
                         window.removeEventListener('message', listener);
@@ -64,19 +71,19 @@
     const startNewTest = (timeout, interval) => {
         senderData = [];
         receiverData = [];
-        receiverFrame.postMessage(JSON.stringify({command: 'reset'}))
-        senderFrame.postMessage(JSON.stringify({command: 'newTest', timeout, interval}))
+        receiverWindow.postMessage(JSON.stringify({command: 'reset'}))
+        senderWindow.postMessage(JSON.stringify({command: 'newTest', timeout, interval}))
     }
     const startOldTest = (timeout, interval) => {
-        receiverFrame.postMessage(JSON.stringify({command: 'reset'}))
-        senderFrame.postMessage(JSON.stringify({command: 'oldTest', timeout, interval}))
+        receiverWindow.postMessage(JSON.stringify({command: 'reset'}))
+        senderWindow.postMessage(JSON.stringify({command: 'oldTest', timeout, interval}))
     }
 
     let senderReady = false;
     let receiverReady = false;
 
-    const startIfReady = ()=> {
-        if(senderReady && receiverReady) {
+    const startIfReady = () => {
+        if (senderReady && receiverReady) {
             log('All ready. Staring...');
             makeTests();
         }
@@ -84,15 +91,15 @@
 
     window.addEventListener('message', (event) => {
         const d = JSON.parse(event.data)
-        if(d.data === "ready")  {
-            if(d.source === "sender")  {
+        if (d.data === "ready") {
+            if (d.source === "sender") {
                 senderReady = true;
-            } else if(d.source === "receiver") {
+            } else if (d.source === "receiver") {
                 receiverReady = true;
             }
             startIfReady();
-        } else if(d.data !== "end") {
-            if(d.source === "sender")  {
+        } else if (d.data !== "end") {
+            if (d.source === "sender") {
                 // senderData.push(d.data);
             } else {
                 receiverData.push(d.data);
@@ -100,7 +107,7 @@
         }
     })
 
-    const makeTests =async () => {
+    const makeTests = async () => {
         const testTime = 30 * 1000;
 
         log('====================== START ============================');
@@ -142,7 +149,7 @@
             const key = data[0];
             const sendTs = data[1];
             const received = receiverData.find(d => d[0] === key);
-            if(!!received) {
+            if (!!received) {
                 const receiveTs = received[1];
                 const latency = receiveTs - sendTs;
                 latencies.push({
@@ -161,6 +168,12 @@
         log(`  MIN Latency: ${min}ms`);
         log(`  MAX Latency: ${max}ms`);
         log(`  Missed ${lost} messages`);
+    }
+    const start = () => {
+        document.body.appendChild(senderFrame)
+        document.body.appendChild(receiverFrame)
+        senderWindow = senderFrame.contentWindow;
+        receiverWindow = receiverFrame.contentWindow;
     }
 </script>
 </body>
