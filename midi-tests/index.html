@@ -11,7 +11,7 @@
     senderFrame.src = "sender.html";
 
     const receiverFrame = document.createElement("iframe");
-    senderFrame.src = "receiver.html";
+    receiverFrame.src = "receiver.html";
 
     let senderWindow, receiverWindow;
     let senderData = []
@@ -39,7 +39,7 @@
                     const d = JSON.parse(data.data)
                     if (d.source === "sender" && d.data.action === "result") {
                         senderData = JSON.parse(d.data.data);
-                        receiverFrame.postMessage(JSON.stringify({command: 'getResult'}))
+                        receiverWindow.postMessage(JSON.stringify({command: 'getResult'}))
                         resolve();
                         window.removeEventListener('message', listener);
                     }
