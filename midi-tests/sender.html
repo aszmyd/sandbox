@@ -1,0 +1,117 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<script src="https://dev.horn.co/api/horn.bundle.js"></script>
+<script>
+    (async () => {
+
+        const log = (data) => {
+            window.top.postMessage(JSON.stringify({
+                source: 'sender',
+                data: data
+            }))
+        }
+        HornJS.HornConfiguration.configure({
+            endpoint: 'https://dev.horn.co'
+        });
+        const guest1 = (await HornJS.AuthenticationService.createGuestUser('KldqJ5yMsDXcU0cXVvNN', 'de482dc1-3fa2-4727-8eda-16830727cf8a', 'Sender Guest')).token
+        const connection = HornJS.HornConnection.get();
+        HornJS.HornConfiguration.configure({
+            authToken: guest1
+        });
+        connection.configure("de482dc1-3fa2-4727-8eda-16830727cf8a")
+        await connection.start();
+
+        connection.onInvited(() => {
+            connection.getAPI().acceptInvitation();
+            window.setTimeout(async () => {
+                await connection.data().newConnection("midi")
+                log("ready")
+            },1000)
+        })
+
+
+        const randomString = (length) => {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+
+        const makeNewTest = (timeout, interval) => {
+            const timeStart = Date.now()
+            const sent = [];
+            const int = window.setInterval(async () => {
+                if (timeStart + timeout < Date.now()) {
+                    clearTimeout(int)
+                    window.setTimeout(() => {
+                        log({
+                            action: "result",
+                            data: JSON.stringify(sent)
+                        })
+                    }, 1000)
+                    return;
+                }
+                const data = [
+                    randomString(12),
+                    Date.now()
+                ]
+                sent.push(data);
+                connection.sendMidiMessage(data)
+                log(data)
+            }, interval);
+        }
+
+        const makeOldTest = (timeout, interval) => {
+            const timeStart = Date.now()
+            const sent = []
+            const int = window.setInterval(() => {
+                if (timeStart + timeout < Date.now()) {
+                    clearTimeout(int)
+                    window.setTimeout(() => {
+                        log({
+                            action: "result",
+                            data: JSON.stringify(sent)
+                        })
+                    }, 1000)
+                    return;
+                }
+                const data = [
+                    randomString(12),
+                    Date.now()
+                ]
+                sent.push(data);
+                connection.getAPI().sendDirectWebSocketMessage({
+                    type: 'external',
+                    data: {
+                        messageType: 'Midi',
+                        data: data
+                    }
+                })
+            }, interval);
+        }
+
+        window.addEventListener('message', (data) => {
+            const d = JSON.parse(data.data)
+            switch (d.command) {
+                case "newTest":
+                    makeNewTest(d.timeout, d.interval);
+                    break;
+                case "oldTest":
+                    makeOldTest(d.timeout, d.interval);
+                    break;
+            }
+        });
+
+
+    })()
+</script>
+</body>
+</html>

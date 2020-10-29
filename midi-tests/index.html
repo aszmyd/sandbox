@@ -1,0 +1,167 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<iframe src="sender.html" id="sender"></iframe>
+<iframe src="receiver.html" id="receiver"></iframe>
+
+<script>
+    const senderFrame = document.getElementById('sender').contentWindow;
+    const receiverFrame = document.getElementById('receiver').contentWindow;
+    let senderData = []
+    let receiverData = []
+
+    const logs = [];
+    const log = (msg) => {
+        logs.push(msg);
+        console.log(msg)
+    };
+
+    const makeLogsLink = () => {
+        const link = document.createElement('a')
+        link.text = 'GET LOGS'
+        link.style.fontSize = '40px'
+        link.target = '_blank';
+        link.href = URL.createObjectURL(new Blob([logs.join("\n")], {type : 'plain/text'}))
+        document.body.append(link);
+    }
+
+    const waitForEnd = () => {
+        return Promise.all([
+            new Promise((resolve) => {
+                const listener = (data) => {
+                    const d = JSON.parse(data.data)
+                    if(d.source === "sender" && d.data.action === "result")  {
+                        senderData = JSON.parse(d.data.data);
+                        receiverFrame.postMessage(JSON.stringify({command: 'getResult'}))
+                        resolve();
+                        window.removeEventListener('message', listener);
+                    }
+                }
+                window.addEventListener('message', listener);
+            }),
+            new Promise((resolve) => {
+                const listener = (data) => {
+                    const d = JSON.parse(data.data)
+                    if(d.source === "receiver" && d.data.action === "result")  {
+                        receiverData = JSON.parse(d.data.data);
+                        resolve();
+                        window.removeEventListener('message', listener);
+                    }
+                }
+                window.addEventListener('message', listener);
+            })
+        ])
+    }
+    const pause = (delayMs) => {
+        return new Promise((resolve) => {
+            window.setTimeout(resolve, delayMs)
+        })
+    }
+
+    const startNewTest = (timeout, interval) => {
+        senderData = [];
+        receiverData = [];
+        receiverFrame.postMessage(JSON.stringify({command: 'reset'}))
+        senderFrame.postMessage(JSON.stringify({command: 'newTest', timeout, interval}))
+    }
+    const startOldTest = (timeout, interval) => {
+        receiverFrame.postMessage(JSON.stringify({command: 'reset'}))
+        senderFrame.postMessage(JSON.stringify({command: 'oldTest', timeout, interval}))
+    }
+
+    let senderReady = false;
+    let receiverReady = false;
+
+    const startIfReady = ()=> {
+        if(senderReady && receiverReady) {
+            log('All ready. Staring...');
+            makeTests();
+        }
+    }
+
+    window.addEventListener('message', (event) => {
+        const d = JSON.parse(event.data)
+        if(d.data === "ready")  {
+            if(d.source === "sender")  {
+                senderReady = true;
+            } else if(d.source === "receiver") {
+                receiverReady = true;
+            }
+            startIfReady();
+        } else if(d.data !== "end") {
+            if(d.source === "sender")  {
+                // senderData.push(d.data);
+            } else {
+                receiverData.push(d.data);
+            }
+        }
+    })
+
+    const makeTests =async () => {
+        const testTime = 30 * 1000;
+
+        log('====================== START ============================');
+        log('----------------OLD TRANSPORT--------------------------');
+
+        log('-------------30s test of 25ms interval-----------------');
+        startOldTest(testTime, 25);
+        await waitForEnd();
+        calculations()
+        await pause(1000);
+
+        log('-------------30s test of 1ms interval-----------------');
+        startOldTest(testTime, 1);
+        await waitForEnd();
+        calculations()
+        await pause(1000);
+
+        log('----------------NEW TRANSPORT--------------------------');
+
+        log('-------------30s test of 25ms interval-----------------');
+        startNewTest(testTime, 25);
+        await waitForEnd();
+        calculations()
+        await pause(1000);
+
+        log('-------------30s test of 1ms interval-----------------');
+        startNewTest(testTime, 1);
+        await waitForEnd();
+        calculations()
+        await pause(1000);
+
+        log('====================== END ============================');
+        makeLogsLink();
+    }
+
+    const calculations = (timeout, interval) => {
+        const latencies = []
+        senderData.forEach((data) => {
+            const key = data[0];
+            const sendTs = data[1];
+            const received = receiverData.find(d => d[0] === key);
+            if(!!received) {
+                const receiveTs = received[1];
+                const latency = receiveTs - sendTs;
+                latencies.push({
+                    key,
+                    latency
+                });
+            }
+        })
+        const latenciesValues = latencies.map(l => l.latency)
+        const avg = Math.floor(latenciesValues.reduce((sume, el) => sume + el, 0) / latenciesValues.length);
+        const min = Math.min(...latenciesValues);
+        const max = Math.max(...latenciesValues)
+        const lost = senderData.length - receiverData.length;
+        log(`Test done. Passed ${senderData.length} messages`);
+        log(`  AVG Latency : ${avg}ms`);
+        log(`  MIN Latency: ${min}ms`);
+        log(`  MAX Latency: ${max}ms`);
+        log(`  Missed ${lost} messages`);
+    }
+</script>
+</body>
+</html>

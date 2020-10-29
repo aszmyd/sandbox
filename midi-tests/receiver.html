@@ -1,0 +1,84 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<script src="https://dev.horn.co/api/horn.bundle.js"></script>
+<script>
+    (async () => {
+
+        const log = (data) => {
+            window.top.postMessage(JSON.stringify({
+                source: 'receiver',
+                data: data
+            }))
+        }
+        HornJS.HornConfiguration.configure({
+            endpoint: 'https://dev.horn.co'
+        });
+        const guest1 = (await HornJS.AuthenticationService.createGuestUser('KldqJ5yMsDXcU0cXVvNN', 'de482dc1-3fa2-4727-8eda-16830727cf8a', 'Receiver Guest')).token
+        const connection = HornJS.HornConnection.get();
+        HornJS.HornConfiguration.configure({
+            authToken: guest1
+        });
+        connection.configure("de482dc1-3fa2-4727-8eda-16830727cf8a")
+        await connection.start();
+
+        connection.onInvited(() => {
+            connection.getAPI().acceptInvitation();
+            window.setTimeout(() => {
+
+                log("ready")
+            },1000)
+        })
+
+        let receivedData = [];
+
+        const makeNewTest = () => {
+            let amount = 0;
+            connection.onMidiMessage((data, userId) => {
+                amount++;
+                receivedData.push([
+                    data[0],
+                    Date.now()
+                ]);
+            })
+        }
+        const makeOldTest = () => {
+            let amount = 0;
+            connection.onWebSocketMessage((msg) => {
+                if(msg.type === "external" && msg.data.messageType === "Midi") {
+                    amount++;
+                    receivedData.push([
+                        msg.data.data[0],
+                        Date.now()
+                    ]);
+                }
+            })
+        }
+
+        makeNewTest();
+        makeOldTest();
+
+
+        window.addEventListener('message', (data) => {
+            const d = JSON.parse(data.data)
+            switch (d.command) {
+                case "reset":
+                    receivedData = [];
+                    break;
+                case "getResult":
+                    log({
+                        action: "result",
+                        data: JSON.stringify(receivedData)
+                    })
+                    break;
+            }
+        });
+
+
+    })()
+</script>
+</body>
+</html>
