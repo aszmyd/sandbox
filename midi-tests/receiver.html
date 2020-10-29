@@ -23,6 +23,7 @@
             authToken: guest1
         });
         connection.configure("de482dc1-3fa2-4727-8eda-16830727cf8a")
+        connection.disableAudioSending();
         await connection.start();
 
         connection.onInvited(() => {
