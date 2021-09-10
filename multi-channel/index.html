@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        button {
+            font-size: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            width: 1024px;
+            height: 256px;
+        }
+
+    </style>
+</head>
+<body>
+
+Multi channel:
+<audio src="multi-channel.wav" controls id="audio-source"></audio>
+<br />
+Remote audio:
+<audio controls id="audio-remote"></audio>
+<button onclick="micAnalyze()">Analyze Mic</button>
+<button onclick="fileAnalyze()">Analyze File</button>
+<button onclick="pcTest()">PC Test</button>
+<hr/>
+Left:<br/>
+<canvas id="left"></canvas>
+
+<hr/>
+Right: <br/>
+<canvas id="right"></canvas>
+
+
+<script>
+
+    const leftCanvas = document.getElementById("left");
+    const rightCanvas = document.getElementById("right");
+    const leftCtx = leftCanvas.getContext("2d");
+    const rightCtx = rightCanvas.getContext("2d");
+    const audioSourceEl = document.getElementById('audio-source');
+    const remoteAudioEl = document.getElementById('audio-remote');
+    const channels = 2;
+
+    const getMic = (channels) => navigator.mediaDevices.getUserMedia({audio: {channelCount: channels}});
+
+    fileAnalyze = () => {
+        analyse(audioSourceEl.captureStream());
+        audioSourceEl.play();
+    }
+    analyse = (stream) => {
+        console.log('stream', stream);
+        console.log('settings', stream.getTracks()[0].getSettings());
+        window.stream = stream;
+
+        const audioContext = new AudioContext();
+
+        const input = audioContext.createMediaStreamSource(stream);
+        const splitter = audioContext.createChannelSplitter(2),
+            lAnalyser = audioContext.createAnalyser(),
+            rAnalyser = audioContext.createAnalyser();
+        input.connect(splitter);
+        splitter.connect(lAnalyser, 0, 0);
+        splitter.connect(rAnalyser, 1, 0);
+        const lArray = new Uint8Array(lAnalyser.frequencyBinCount),
+            rArray = new Uint8Array(rAnalyser.frequencyBinCount);
+        updateAnalyser();
+
+        function updateAnalyser() {
+            requestAnimationFrame(updateAnalyser);
+            lAnalyser.getByteFrequencyData(lArray);
+            rAnalyser.getByteFrequencyData(rArray);
+            draw(lArray, rArray);
+            // console.log(`L: ${JSON.stringify(lArray)}`);
+            // console.log(`R: ${JSON.stringify(rArray)}`);
+        }
+    }
+    micAnalyze = async () => {
+        analyse(await getMic(channels));
+    }
+
+    const draw = (left, right) => {
+
+        leftCtx.clearRect(0, 0, leftCanvas.width, leftCanvas.height);
+        rightCtx.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
+
+        leftCtx.beginPath();
+        leftCtx.strokeStyle = 'blue';
+        Object.values(left).forEach((v, index) => {
+            leftCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
+        })
+        leftCtx.stroke();
+
+        rightCtx.beginPath();
+        rightCtx.strokeStyle = 'blue';
+        Object.values(right).forEach((v, index) => {
+            rightCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
+        })
+        rightCtx.stroke();
+
+    }
+
+    pcTest = async () => {
+        console.log('pcTest');
+        const pc1 = new RTCPeerConnection();
+        const pc2 = new RTCPeerConnection();
+
+        pc1.addEventListener('connectionstatechange', () => {
+            console.log('pc1.connectionState', pc1.connectionState);
+        });
+        pc1.addEventListener('signalingstatechange', () => {
+            console.log('pc1.signalingState', pc1.signalingState);
+        });
+        pc2.addEventListener('connectionstatechange', () => {
+            console.log('pc2.connectionState', pc2.connectionState);
+        });
+        pc2.addEventListener('signalingstatechange', () => {
+            console.log('pc2.signalingState', pc2.signalingState);
+        });
+
+        pc1.addEventListener('icecandidate', (c) =>{
+            pc2.addIceCandidate(c.candidate);
+        })
+        pc2.addEventListener('icecandidate', (c) =>{
+            pc1.addIceCandidate(c.candidate);
+        });
+
+        pc2.addEventListener('track', (e) => {
+            remoteAudioEl.srcObject = e.streams[0];
+            analyse(e.streams[0]);
+        })
+
+        const stream = audioSourceEl.captureStream();// await getMic(1);
+        console.log(stream.getAudioTracks());
+        pc1.addTrack(stream.getAudioTracks()[0], stream);
+        const pc1Offer = await pc1.createOffer();
+        await pc1.setLocalDescription(pc1Offer);
+
+        await pc2.setRemoteDescription(pc1Offer);
+        const pc2Answer = await pc2.createAnswer();
+        await pc2.setLocalDescription(pc2Answer);
+
+        await pc1.setRemoteDescription(pc2Answer);
+
+
+
+    }
+
+</script>
+</body>
+</html>
