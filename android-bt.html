@@ -18,6 +18,11 @@
 <button onclick="grabMic()" id="grab" style="display: block">Grab Mic</button>
 <button onclick="releaseMic()" id="release" style="display:none;">Release Mic</button>
 
+<hr />
+<button onclick="enumerate()">Enumerate Devices</button>
+<br />
+<div id="devices"></div>
+
 <script>
     let stream = null;
     grabMic = () => {
@@ -32,6 +37,13 @@
         stream = null;
         document.getElementById('release').style.display = 'none';
         document.getElementById('grab').style.display = 'block';
+    }
+    enumerate = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log(devices);
+        document.getElementById('devices').innerHTML = `<ul>${devices.map((d) => {
+            return `<li>${JSON.stringify(d)}</li>`;
+        }).join('')}</ul>`
     }
 </script>
 </body>
