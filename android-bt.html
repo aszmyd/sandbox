@@ -7,12 +7,16 @@
         button {
             font-size: 36px;
         }
+         button.sm {
+             font-size: 20px;
+         }
 
     </style>
 </head>
 <body>
 
-<audio src="sound.mp3" controls></audio>
+<audio src="sound.mp3" id="player" controls></audio>
+<br />Sink: <span id="sink"></span>
 <hr/>
 
 <button onclick="grabMic()" id="grab" style="display: block">Grab Mic</button>
@@ -41,10 +45,17 @@
     enumerate = async () => {
         const devices = await navigator.mediaDevices.enumerateDevices();
         console.log(devices);
-        document.getElementById('devices').innerHTML = `<ul>${devices.map((d) => {
-            return `<li>${JSON.stringify(d)}</li>`;
-        }).join('')}</ul>`
+        document.getElementById('devices').innerHTML = `<table border="1">${devices.map((d) => {
+           const action = d.kind.indexOf('audio') === 0 ? `
+            <button class="sm" onclick="document.getElementById('player').setSinkId('${d.deviceId}').catch(alert);window.setTimeout(updateSink,500)">Choose</button>
+           ` : '';
+            return `<tr><td>${action}</td><td>${d.kind}</td><td>${JSON.stringify(d)}</td></tr>`;
+        }).join('')}</table>`
     }
+    updateSink = () => {
+        document.getElementById('sink').innerText = document.getElementById('player').sinkId;
+    }
+    updateSink();
 </script>
 </body>
 </html>
