@@ -137,14 +137,24 @@ Right: <br/>
         console.log(stream.getAudioTracks());
         pc1.addTrack(stream.getAudioTracks()[0], stream);
         const pc1Offer = await pc1.createOffer();
+
+        pc1Offer.sdp = pc1Offer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+
+        console.log('pc1Offer', pc1Offer);
         await pc1.setLocalDescription(pc1Offer);
 
         await pc2.setRemoteDescription(pc1Offer);
         const pc2Answer = await pc2.createAnswer();
+
+        pc2Answer.sdp = pc2Answer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+
+        console.log('pc2Answer', pc2Answer);
         await pc2.setLocalDescription(pc2Answer);
 
         await pc1.setRemoteDescription(pc2Answer);
 
+        audioSourceEl.play();
+        remoteAudioEl.play();
 
 
     }
