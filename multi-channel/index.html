@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        button {
+            font-size: 36px;
+        }
+        button.sm {
+            font-size: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+            width: 1024px;
+            height: 256px;
+        }
+
+    </style>
+</head>
+<body>
+
+<audio src="multi-channel.wav" controls></audio>
+<button onclick="mic()">Analyze Mic</button>
+<hr />
+Left:<br />
+<canvas id="left"></canvas>
+
+<hr />
+Right: <br />
+<canvas id="right"></canvas>
+
+
+<script>
+
+    const leftCanvas = document.getElementById("left");
+    const rightCanvas = document.getElementById("right");
+    const leftCtx = leftCanvas.getContext("2d");
+    const rightCtx = rightCanvas.getContext("2d");
+    const audioEl = document.getElementsByTagName('audio')[0];
+    const channels = 2;
+
+    mic = () => {
+        navigator.getUserMedia({audio: {channelCount: channels}}, analyse, function(e) {
+            alert('Error getting audio');
+            console.log(e);
+        });
+    }
+    audioEl.addEventListener('playing', () => {
+        analyse(audioEl.captureStream());
+    });
+
+    function analyse(stream){
+        console.log('stream', stream);
+        console.log('settings', stream.getTracks()[0].getSettings());
+        window.stream = stream;
+
+        const audioContext = new AudioContext();
+
+        const input = audioContext.createMediaStreamSource(stream);
+        const splitter = audioContext.createChannelSplitter(2),
+            lAnalyser = audioContext.createAnalyser(),
+            rAnalyser = audioContext.createAnalyser();
+        input.connect(splitter);
+        splitter.connect(lAnalyser, 0, 0);
+        splitter.connect(rAnalyser, 1, 0);
+        const lArray = new Uint8Array(lAnalyser.frequencyBinCount),
+            rArray = new Uint8Array(rAnalyser.frequencyBinCount);
+        updateAnalyser();
+        function updateAnalyser(){
+            requestAnimationFrame(updateAnalyser);
+            lAnalyser.getByteFrequencyData(lArray);
+            rAnalyser.getByteFrequencyData(rArray);
+            draw(lArray, rArray);
+            // console.log(`L: ${JSON.stringify(lArray)}`);
+            // console.log(`R: ${JSON.stringify(rArray)}`);
+        }
+    }
+
+    const draw = (left, right) => {
+
+        leftCtx.clearRect(0, 0, leftCanvas.width, leftCanvas.height);
+        rightCtx.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
+
+        leftCtx.beginPath();
+        leftCtx.strokeStyle = 'blue';
+        Object.values(left).forEach((v, index) => {
+            leftCtx.lineTo(index+1, 128 - Math.floor(v/2) );
+        })
+        leftCtx.stroke();
+
+        rightCtx.beginPath();
+        rightCtx.strokeStyle = 'blue';
+        Object.values(right).forEach((v, index) => {
+            rightCtx.lineTo(index+1, 128 - Math.floor(v/2) );
+        })
+        rightCtx.stroke();
+
+    }
+
+</script>
+</body>
+</html>
