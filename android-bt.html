@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        button {
+            font-size: 36px;
+        }
+
+    </style>
+</head>
+<body>
+
+<audio src="sound.mp3" controls></audio>
+<hr/>
+
+<button onclick="grabMic()" id="grab" style="display: block">Grab Mic</button>
+<button onclick="releaseMic()" id="release" style="display:none;">Release Mic</button>
+
+<script>
+    let stream = null;
+    grabMic = () => {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(s => {
+            stream = s;
+            document.getElementById('grab').style.display = 'none';
+            document.getElementById('release').style.display = 'block';
+        });
+    }
+    releaseMic = () => {
+        stream.getTracks().forEach(t =>  t.stop());
+        stream = null;
+        document.getElementById('release').style.display = 'none';
+        document.getElementById('grab').style.display = 'block';
+    }
+</script>
+</body>
+</html>
