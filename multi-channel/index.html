@@ -18,15 +18,47 @@
 </head>
 <body>
 
-Multi channel:
-<audio src="multi-channel.wav" controls id="audio-source"></audio>
-<br />
-Remote audio:
-<audio controls id="audio-remote"></audio>
-<button onclick="micAnalyze()">Analyze Mic</button>
-<button onclick="fileAnalyze()">Analyze File</button>
-<button onclick="pcTest()">PC Test</button>
+Local Tests:
+<button onclick="fileAnalyze('all')">Play All</button>
+<button onclick="fileAnalyze('left')">Play Left</button>
+<button onclick="fileAnalyze('right')">Play Right</button>
+<button onclick="fileAnalyze('center')">Play Center</button>
 <hr/>
+Mic Tests:
+<button onclick="micAnalyze(1)">Grab Mic (mono)</button>
+<button onclick="micAnalyze(2)">Grab Mic (stereo)</button>
+<hr/>
+
+PeerConnections (all):
+<br/>
+<ul>
+    <li>
+        <button onclick="pcTest('all', false)">all</button>
+    </li>
+    <li>
+        <button onclick="pcTest('all', true)">all with SDP changes</button>
+    </li>
+    <li>
+        <button onclick="pcTest('left', false)">left</button>
+    </li>
+    <li>
+        <button onclick="pcTest('left', true)">left with SDP changes</button>
+    </li>
+    <li>
+        <button onclick="pcTest('right', false)">right</button>
+    </li>
+    <li>
+        <button onclick="pcTest('right', true)">right with SDP changes</button>
+    </li>
+    <li>
+        <button onclick="pcTest('center', false)">center</button>
+    </li>
+    <li>
+        <button onclick="pcTest('center', true)">center with SDP changes</button>
+    </li>
+</ul>
+<hr/>
+
 Left:<br/>
 <canvas id="left"></canvas>
 
@@ -34,25 +66,48 @@ Left:<br/>
 Right: <br/>
 <canvas id="right"></canvas>
 
-
 <script>
 
     const leftCanvas = document.getElementById("left");
     const rightCanvas = document.getElementById("right");
     const leftCtx = leftCanvas.getContext("2d");
     const rightCtx = rightCanvas.getContext("2d");
-    const audioSourceEl = document.getElementById('audio-source');
-    const remoteAudioEl = document.getElementById('audio-remote');
-    const channels = 2;
 
     const getMic = (channels) => navigator.mediaDevices.getUserMedia({audio: {channelCount: channels}});
 
-    fileAnalyze = () => {
-        analyse(audioSourceEl.captureStream());
-        audioSourceEl.play();
+    getLocalStream = async (side, silent) => {
+        const audioEl = new Audio(`${side}.wav`);
+        const audioContext = new AudioContext()
+        const source = audioContext.createMediaElementSource(audioEl)
+        source.connect(silent ? source.connect(audioContext.createMediaStreamDestination()) : audioContext.destination)
+        await audioEl.play();
+        await audioEl.pause();
+        return {
+            stream: audioEl.captureStream(),
+            play: () => audioEl.play(),
+            pause: () => audioEl.pause()
+        }
     }
+
+    playStream = (stream) => {
+        const newEl = new Audio();
+        newEl.srcObject = stream;
+        document.body.appendChild(newEl);
+        newEl.play();
+    }
+
+    fileAnalyze = async (side) => {
+        const str = await getLocalStream(side);
+        analyse(str.stream);
+        await str.play();
+    }
+
+    micAnalyze = async (channels) => {
+        analyse(await getMic(channels));
+    }
+
     analyse = (stream) => {
-        console.log('stream', stream);
+        console.log('analyse stream', stream);
         console.log('settings', stream.getTracks()[0].getSettings());
         window.stream = stream;
 
@@ -74,12 +129,7 @@ Right: <br/>
             lAnalyser.getByteFrequencyData(lArray);
             rAnalyser.getByteFrequencyData(rArray);
             draw(lArray, rArray);
-            // console.log(`L: ${JSON.stringify(lArray)}`);
-            // console.log(`R: ${JSON.stringify(rArray)}`);
         }
-    }
-    micAnalyze = async () => {
-        analyse(await getMic(channels));
     }
 
     const draw = (left, right) => {
@@ -103,13 +153,17 @@ Right: <br/>
 
     }
 
-    pcTest = async () => {
-        console.log('pcTest');
+    pcTest = async (sourceType, sdpChanges) => {
         const pc1 = new RTCPeerConnection();
         const pc2 = new RTCPeerConnection();
+        let onConnected = () => {
+        }
 
         pc1.addEventListener('connectionstatechange', () => {
             console.log('pc1.connectionState', pc1.connectionState);
+            if (pc1.connectionState === "connected") {
+                onConnected();
+            }
         });
         pc1.addEventListener('signalingstatechange', () => {
             console.log('pc1.signalingState', pc1.signalingState);
@@ -121,41 +175,48 @@ Right: <br/>
             console.log('pc2.signalingState', pc2.signalingState);
         });
 
-        pc1.addEventListener('icecandidate', (c) =>{
+        pc1.addEventListener('icecandidate', (c) => {
             pc2.addIceCandidate(c.candidate);
         })
-        pc2.addEventListener('icecandidate', (c) =>{
+        pc2.addEventListener('icecandidate', (c) => {
             pc1.addIceCandidate(c.candidate);
         });
 
         pc2.addEventListener('track', (e) => {
-            remoteAudioEl.srcObject = e.streams[0];
+            playStream(e.streams[0]);
             analyse(e.streams[0]);
         })
 
-        const stream = audioSourceEl.captureStream();// await getMic(1);
+        let stream = undefined;
+        if (sourceType === 'mic-mono' || sourceType === 'mic-stereo') {
+            stream = await getMic(sourceType === 'mic-mono' ? 1 : 2);
+        } else {
+            const streamWrapper = await getLocalStream(sourceType, true)
+            stream = streamWrapper.stream
+            onConnected = () => streamWrapper.play();
+        }
         console.log(stream.getAudioTracks());
         pc1.addTrack(stream.getAudioTracks()[0], stream);
         const pc1Offer = await pc1.createOffer();
 
-        pc1Offer.sdp = pc1Offer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
-
+        if (sdpChanges) {
+            pc1Offer.sdp = pc1Offer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+        }
         console.log('pc1Offer', pc1Offer);
+
         await pc1.setLocalDescription(pc1Offer);
 
         await pc2.setRemoteDescription(pc1Offer);
         const pc2Answer = await pc2.createAnswer();
 
-        pc2Answer.sdp = pc2Answer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+        if (sdpChanges) {
+            pc2Answer.sdp = pc2Answer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+        }
 
         console.log('pc2Answer', pc2Answer);
         await pc2.setLocalDescription(pc2Answer);
 
         await pc1.setRemoteDescription(pc2Answer);
-
-        audioSourceEl.play();
-        remoteAudioEl.play();
-
 
     }
 
