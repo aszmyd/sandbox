@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<button onclick="test()" style="font-size: 60px">Test</button>
+<button onclick="test(500)" style="font-size: 60px">Test delay</button>
+<button onclick="send()" style="font-size: 60px">Send</button>
+<script>
+    console.log('testy');
+
+    const event = {
+        "type": "external",
+        "data": {
+            "messageType": "Login",
+            "channel": "3271e8d8-6d81-478e-b6c1-3191d2fb3a1a",
+            "service": "conference",
+            "token": "Bearer vd1O65EPT",
+            "details": {"audioDirection": "inactive", "attendee": false}
+        }
+    }
+    send = () => {
+        console.log('---> send');
+        ws.send(JSON.stringify(event))
+    }
+
+    test = () => {
+        ws = new WebSocket('wss://talk.app.dev.horn.co/broker/ss-server-1')
+        ws.onopen = (delay) => {
+            console.log('ws:opened');
+
+            if(delay) {
+
+                window.setTimeout(() => {
+                    send();
+                }, delay)
+            } else {
+                send();
+            }
+        }
+        ws.onerror = () => console.log('ws:error');
+        ws.onmessage = (d) => console.log('ws:message', d.data);
+        ws.onclose = () => console.log('ws:closed');
+
+    }
+</script>
+
+</body>
+</html>
+
