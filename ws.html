@@ -12,6 +12,7 @@
     </style>
 </head>
 <body>
+<button onclick="test(false)" style="font-size: 60px">Just open</button>
 <button onclick="test()" style="font-size: 60px">Test</button>
 <button onclick="test(500)" style="font-size: 60px">Test delay</button>
 <button onclick="send()" style="font-size: 60px">Send</button>
@@ -33,9 +34,9 @@
         ws.send(JSON.stringify(event))
     }
 
-    test = () => {
+    test = (delay) => {
         ws = new WebSocket('wss://talk.app.dev.horn.co/broker/ss-server-1')
-        ws.onopen = (delay) => {
+        ws.onopen = () => {
             console.log('ws:opened');
 
             if(delay) {
@@ -43,7 +44,7 @@
                 window.setTimeout(() => {
                     send();
                 }, delay)
-            } else {
+            } else if(delay !== false) {
                 send();
             }
         }
