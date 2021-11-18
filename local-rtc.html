@@ -40,7 +40,7 @@ width: {ideal: 360}, height: {ideal: 640}
     run = (constraints) => {
         navigator.mediaDevices.getUserMedia({video: {
             ...constraints,
-                // aspectRatio: 4 / 3
+                aspectRatio: 4 / 3
             }}).then(async (s) => {
             localVideo.srcObject = s;
             pcLocal = new RTCPeerConnection({
