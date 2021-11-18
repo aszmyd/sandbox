@@ -8,10 +8,9 @@
 </head>
 <body>
 
-<button onclick="run({})">RUN1</button>
+<button onclick="run({})">RUN</button>
 <button onclick="run({
-width: {ideal: '360'},
-height: {ideal: '640'}
+width: {ideal: 360}, height: {ideal: 640}
 })">RUN 640x360</button>
 <table>
     <thead>
@@ -41,7 +40,7 @@ height: {ideal: '640'}
     run = (constraints) => {
         navigator.mediaDevices.getUserMedia({video: {
             ...constraints,
-                aspectRatio: 4 / 3
+                // aspectRatio: 4 / 3
             }}).then(async (s) => {
             localVideo.srcObject = s;
             pcLocal = new RTCPeerConnection({
