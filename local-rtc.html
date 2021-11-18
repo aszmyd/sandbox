@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+
+<button onclick="run({})">RUN</button>
+<button onclick="run({
+width: {ideal: '360'},
+height: {ideal: '640'}
+})">RUN 640x360</button>
+<table>
+    <thead>
+    <tr>
+        <th>Local</th>
+        <th>Remote</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <video id="localVideo" controls style="width: 200px; height: 200px" autoplay muted></video>
+        </td>
+        <td>
+            <video id="remoteVideo" controls style="width: 200px; height: 200px" autoplay muted></video>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<script>
+    const localVideo = document.querySelector('#localVideo');
+    const remoteVideo = document.querySelector('#remoteVideo');
+    let pcLocal;
+    let pcRemote;
+    let wasInitializing = false;
+
+    run = (constraints) => {
+        navigator.mediaDevices.getUserMedia({video: constraints}).then(async (s) => {
+            localVideo.srcObject = s;
+            pcLocal = new RTCPeerConnection({
+                iceServers: [{
+                    urls: 'stun:stun.l.google.com:19302' // Google's public STUN server
+                }]
+            });
+            pcRemote = new RTCPeerConnection({
+                iceServers: [{
+                    urls: 'stun:stun.l.google.com:19302' // Google's public STUN server
+                }]
+            });
+
+            pcLocal.oniceconnectionstatechange = (e) => console.log('pcLocal oniceconnectionstatechange', pcLocal.iceConnectionState);
+            pcRemote.oniceconnectionstatechange = (e) => console.log('pcRemote oniceconnectionstatechange', pcRemote.iceConnectionState);
+
+            pcLocal.ongatheringstatechange = (e) => console.log('pcLocal ongatheringstatechange', pcLocal.iceGatheringState);
+            pcRemote.ongatheringstatechange = (e) => console.log('pcRemote gathering', pcRemote.iceGatheringState);
+
+            pcLocal.onconnectionstatechange = (e) => console.log('pcLocal onconnectionstatechange', pcLocal.iceConnectionState);
+            pcRemote.onconnectionstatechange = (e) => console.log('pcRemote onconnectionstatechange', pcRemote.iceConnectionState);
+
+            pcLocal.onicecandidate = (e) => {
+                if (e.candidate) {
+                    pcRemote.addIceCandidate(e.candidate);
+                }
+            }
+            pcRemote.onicecandidate = (e) => {
+                if (e.candidate) {
+                    pcLocal.addIceCandidate(e.candidate);
+                }
+            }
+
+            pcLocal.addStream(s);
+            pcRemote.onaddtrack = (e) => {
+                console.log('got track', e);
+                // remoteVideo.srcObject = e.target;
+            };
+
+            const offer = await pcLocal.createOffer();
+            await pcLocal.setLocalDescription(offer);
+            await pcRemote.setRemoteDescription(offer);
+            const answer = await pcRemote.createAnswer();
+            await pcRemote.setLocalDescription(answer);
+            await pcLocal.setRemoteDescription(answer);
+
+            remoteVideo.srcObject = pcRemote.getRemoteStreams()[0];
+        })
+    };
+
+</script>
+
+</body>
+</html>
