@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+<h3>Status:
+    <span id="status">CHECKING...</span>
+
+</h3>
+
+Local SDP Offer:
+<hr />
+<pre type="text" id="local-sdp" style="width: 100%; height: 200px;" />
+
+
+<script>
+    const status = document.getElementById('status')
+    const setStatus = (text, isError) => {
+        status.innerText = text
+        if(isError) {
+            status.style.color = 'red';
+        } else {
+            status.style.color = 'green';
+        }
+    }
+    try {
+        navigator.mediaDevices.getUserMedia({audio: true, video: true}).then((stream) => {
+
+            const pc1 = new RTCPeerConnection()
+            
+            stream.getTracks().forEach((track) => {
+                pc1.addTrack(track, stream)
+            })
+
+            const supportsTransportCC = (sdp) => {
+                return sdp.indexOf('transport-cc') !== -1
+            }
+
+            pc1.createOffer().then(offer => {
+                document.getElementById('local-sdp').innerHTML = offer.sdp
+                if(supportsTransportCC(offer.sdp)) {
+                    setStatus('SUPPORTED', false)
+                } else {
+                    setStatus('NOT SUPPORTED', false)
+                }
+            }).catch((error) => {
+                console.error(error);
+                setStatus('ERROR: ' + error.message, true)
+                throw error;
+            })
+
+        }).catch((e) => {
+            console.error(e);
+            setStatus('ERROR: ' + error.message, true)
+        })
+
+    } catch (e) {
+        console.error(e);
+        setStatus('ERROR: ' + error.message, true)
+    }
+
+</script>
+
+</body>
+</html>
