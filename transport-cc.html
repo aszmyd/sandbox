@@ -28,7 +28,7 @@ Local SDP Offer:
         }
     }
     try {
-        navigator.mediaDevices.getUserMedia({audio: true, video: true}).then((stream) => {
+        navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
 
             const pc1 = new RTCPeerConnection()
             
@@ -45,7 +45,7 @@ Local SDP Offer:
                 if(supportsTransportCC(offer.sdp)) {
                     setStatus('SUPPORTED', false)
                 } else {
-                    setStatus('NOT SUPPORTED', false)
+                    setStatus('NOT SUPPORTED', true)
                 }
             }).catch((e) => {
                 console.error(e);
