@@ -47,20 +47,20 @@ Local SDP Offer:
                 } else {
                     setStatus('NOT SUPPORTED', false)
                 }
-            }).catch((error) => {
-                console.error(error);
-                setStatus('ERROR: ' + error.message, true)
-                throw error;
+            }).catch((e) => {
+                console.error(e);
+                setStatus('ERROR: ' + e.message, true)
+                throw e;
             })
 
         }).catch((e) => {
             console.error(e);
-            setStatus('ERROR: ' + error.message, true)
+            setStatus('ERROR: ' + e.message, true)
         })
 
     } catch (e) {
         console.error(e);
-        setStatus('ERROR: ' + error.message, true)
+        setStatus('ERROR: ' + e.message, true)
     }
 
 </script>
