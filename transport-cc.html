@@ -28,7 +28,7 @@ Local SDP Offer:
         }
     }
     try {
-        navigator.mediaDevices.getUserMedia({audio: true, video: true}).then((stream) => {
+        navigator.mediaDevices.getUserMedia({audio: true}).then((stream) => {
 
             const pc1 = new RTCPeerConnection()
             
