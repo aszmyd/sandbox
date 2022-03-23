@@ -8,10 +8,20 @@
             font-size: 20px;
         }
 
+        .container {
+            display: flex;
+        }
+        .container > div {
+            width: 100%;
+            padding: 10px;
+        }
         canvas {
             border: 1px solid black;
-            width: 1024px;
-            height: 256px;
+            width: 100%;
+            height: 128px;
+        }
+        video {
+            width: 100%;
         }
 
     </style>
@@ -22,18 +32,23 @@
 
 <hr>
 
-Channels:
-<br />
-Left:<br/>
-<canvas id="left"></canvas>
+<div class="container">
+    <div>
+        Channels:
+        <br/>
+        Left:<br/>
+        <canvas id="left"></canvas>
 
-<hr/>
-Right: <br/>
-<canvas id="right"></canvas>
-<hr >
-Output:
-
-<video controls id="output"></video>
+        <hr/>
+        Right: <br/>
+        <canvas id="right"></canvas>
+    </div>
+    <div>
+        Output:
+        <br />
+        <video controls id="output"></video>
+    </div>
+</div>
 
 <script>
 
