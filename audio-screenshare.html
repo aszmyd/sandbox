@@ -29,6 +29,7 @@
 <body>
 
 <button onclick="capture()">Capture</button>
+<button onclick="local()">Load Local file</button>
 
 <hr>
 
@@ -58,6 +59,13 @@
     const leftCtx = leftCanvas.getContext("2d");
     const rightCtx = rightCanvas.getContext("2d");
 
+    local = async () => {
+        output.src = 'stereo-test.mp4'
+        output.play()
+        output.addEventListener('canplaythrough', () => {
+            analyse(output.captureStream())
+        })
+    }
     capture = async () => {
         const stream = await navigator.mediaDevices.getDisplayMedia({audio: true, video: true})
         output.srcObject = stream
