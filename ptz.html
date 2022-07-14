@@ -1,0 +1,38 @@
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<button onclick="run()">RUN</button>
+<button onclick="zoomIn()">ZOOM IN</button>
+<button onclick="zoomOut()">ZOOM OUT</button>
+
+<script>(function () {
+    run = async () => {
+        const frame = document.createElement('iframe');
+        frame.style.width = '100%'
+        frame.style.height = '400px'
+        frame.id = 'ptz_frame'
+        frame.src = 'https://192.168.25.13/#devinfo'
+        document.body.appendChild(frame);
+
+    };
+    zoomIn = async () => {
+        document.getElementById('ptz_frame').contentWindow.postMessage('EXTERNAL_MIDI;[144,55,85]', '*') /* ZOOM IN */
+    }
+
+    zoomOut = async () => {
+        document.getElementById('ptz_frame').contentWindow.postMessage('EXTERNAL_MIDI;[144,56,127]', '*') /* ZOOM OUT */
+    }
+})()</script>
+</body>
+</html>
