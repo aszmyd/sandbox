@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -12,27 +11,24 @@
     </style>
 </head>
 <body>
-<button onclick="run()">RUN</button>
+<span>Camera IP: <b id="ip"></b></span>
+
+<hr/>
 <button onclick="zoomIn()">ZOOM IN</button>
 <button onclick="zoomOut()">ZOOM OUT</button>
 
 <script>(function () {
-    run = async () => {
-        const frame = document.createElement('iframe');
-        frame.style.width = '100%'
-        frame.style.height = '400px'
-        frame.id = 'ptz_frame'
-        frame.src = 'https://192.168.25.13/#devinfo'
-        document.body.appendChild(frame);
+    const ip = (new URLSearchParams(location.search)).get('ip') ?? '192.168.25.13';
+    document.getElementById('ip').innerText = ip;
 
-    };
     zoomIn = async () => {
-        document.getElementById('ptz_frame').contentWindow.postMessage('EXTERNAL_MIDI;[144,55,85]', '*') /* ZOOM IN */
+        await fetch(`http://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomin&5`)
     }
 
     zoomOut = async () => {
-        document.getElementById('ptz_frame').contentWindow.postMessage('EXTERNAL_MIDI;[144,56,127]', '*') /* ZOOM OUT */
+        await fetch(`http://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomout&5`)
     }
+
 })()</script>
 </body>
 </html>
