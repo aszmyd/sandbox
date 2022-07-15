@@ -22,11 +22,11 @@
     document.getElementById('ip').innerText = ip;
 
     zoomIn = async () => {
-        await fetch(`http://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomin&5`)
+        await fetch(`https://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomin&5`)
     }
 
     zoomOut = async () => {
-        await fetch(`http://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomout&5`)
+        await fetch(`https://${ip}/cgi-bin/ptzctrl.cgi?ptzcmd&zoomout&5`)
     }
 
 })()</script>
