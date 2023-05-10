@@ -1,0 +1,46 @@
+<!-- https://github.com/WICG/local-network-access/blob/main/permission_prompt/explainer.md -->
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<label>URL to call:</label>
+<input type="text"  id="address" />
+<button onclick="callOldWay()">Call in the old way</button>
+<button onclick="callWithTarget()">Call with targetAddressSpace</button>
+<script>
+    (async () => {
+
+        window.callOldWay = async () => {
+            const address = document.getElementById('address').value;
+            try {
+                console.log(`Calling ${address}`)
+              const result = await fetch(address)
+                console.log(`Success. Response: ${result.status} ${result.statusText} ${await result.text()}`)
+            } catch (e) {
+                console.error(`Failure`, e)
+            }
+
+        };
+        window.callWithTarget = async () => {
+            const address = document.getElementById('address').value;
+            try {
+                console.log(`Calling ${address} with targetAddressSpace=local`)
+                const result = await fetch(address, {
+                    targetAddressSpace: "local"
+                })
+                console.log(`Success. Response: ${result.status} ${result.statusText} ${await result.text()}`)
+            } catch (e) {
+                console.error(`Failure`, e)
+            }
+        }
+    })();
+</script>
+</body>
+</html>
