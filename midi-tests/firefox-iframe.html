@@ -1,0 +1,17 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<button onclick="start()">START FROM IFRAME</button>
+
+<script>
+
+    const start = async  () => {
+        console.log('--start')
+        console.log(await navigator.requestMIDIAccess())
+    }
+</script>
+</body>
+</html>

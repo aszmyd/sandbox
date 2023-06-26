@@ -1,0 +1,20 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<button onclick="start()">START</button>
+
+<iframe src="https://tiqur.com/midi/test.html" style="width: 200px; height: 50px; border: 1px solid red;"></iframe>
+
+<script>
+
+
+    const start = async  () => {
+        console.log('--start')
+        console.log(await navigator.requestMIDIAccess())
+    }
+</script>
+</body>
+</html>
