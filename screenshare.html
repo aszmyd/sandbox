@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <p>getDisplayMedia presence: <span id="presence">---</span></p>
+    <div id="content" style="display: none">
+      <hr />
+      <button onclick="start()" style="font-size: 40px">Start sharing</button>
+      <br />
+      <br />
+      <video
+        style="width: 100%; opacity: 0.1; border: 1px solid red"
+        controls
+      ></video>
+    </div>
+    <script>
+      const supported =
+        "getDisplayMedia" in navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getDisplayMedia === "function";
+      document.getElementById("presence").innerHTML = supported
+        ? '<span style="color: green">YES</span>'
+        : '<span style="color: red">NO</span>';
+      if (supported) {
+        document.getElementById("content").style.display = "block";
+      }
+      start = () => {
+        navigator.mediaDevices.getDisplayMedia().then((str) => {
+          document.getElementsByTagName("video")[0].srcObject = str;
+          document.getElementsByTagName("video")[0].play();
+          document.getElementsByTagName("video")[0].style.opacity = 1;
+        });
+      };
+    </script>
+  </body>
+</html>
