@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <style type="text/css">
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Inputs:</h2>
+    <ul id="inputs"></ul>
+
+    <h2>Outputs:</h2>
+    <ul id="outputs"></ul>
+    <script>
+      (function () {
+        console.log("ok");
+        navigator
+          .requestMIDIAccess({
+            sysex: true,
+            software: true,
+          })
+          .then((access) => {
+            console.log("inputs", [...access.inputs]);
+            console.log("outputs", [...access.outputs]);
+            [...access.inputs].forEach((input) => {
+              const li = document.createElement("li");
+              li.textContent = `${input[1].name} (${input[1].manufacturer})`;
+              document.getElementById("inputs").appendChild(li);
+            });
+            [...access.outputs].forEach((output) => {
+              const li = document.createElement("li");
+              li.textContent = `${output[1].name} (${output[1].manufacturer})`;
+              document.getElementById("outputs").appendChild(li);
+            });
+          });
+      })();
+    </script>
+  </body>
+</html>
