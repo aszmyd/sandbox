@@ -67,6 +67,7 @@
     </div>
 
     <script>
+      const grabMic = location.href.includes("microphone");
       const startButton = document.getElementById("startButton");
       const outputDiv = document.getElementById("output");
       const recognition =
@@ -75,7 +76,16 @@
       recognition.interimResults = true;
       recognition.continuous = true;
 
-      startButton.addEventListener("click", () => {
+      let micStream = null;
+
+      startButton.addEventListener("click", async () => {
+        if (grabMic && !micStream) {
+          console.log("Grabbing Microphone");
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          console.log("Microphone Grabbed");
+        }
         recognition.lang = document.querySelector("#lang").value;
         recognition.start();
         startButton.disabled = true;
