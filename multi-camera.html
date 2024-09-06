@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<button onclick="ask()">Start</button>
+
+<hr />
+<h2>Video Cameras:</h2>
+<div id="videoDevices"></div>
+
+<hr />
+<h2>Camerea feeds:</h2>
+<div id="feeds"></div>
+
+<script>
+    ask = () => {
+        navigator.mediaDevices.getUserMedia({video: true}).then(stream => {
+            // destroy stream
+            stream.getTracks().forEach(track => track.stop());
+            // enumerate devices
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices.filter(device => device.kind === 'videoinput').forEach(device => {
+                    const button = document.createElement('button');
+                    button.textContent = device.label;
+                    button.onclick = () => {
+                        navigator.mediaDevices.getUserMedia({video: {deviceId: device.deviceId}}).then(stream => {
+                            button.disabled = true;
+                            const newVideo = document.createElement('video');
+                            newVideo.srcObject = stream;
+                            newVideo.controls = true;
+                            newVideo.width = 320;
+                            newVideo.style.border = '1px solid red';
+                            document.querySelector('#feeds').appendChild(newVideo);
+                            newVideo.play();
+                        });
+                    };
+                    document.getElementById('videoDevices').appendChild(button);
+                });
+            });
+        });
+    }
+    srcObjectTest = () => {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+            document.getElementById('mic').srcObject = stream;
+            document.getElementById('mic').play();
+        });
+    }
+</script>
+</body>
+</html>
