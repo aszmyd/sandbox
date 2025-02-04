@@ -1,208 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        button {
-            font-size: 20px;
-        }
+      button {
+        font-size: 20px;
+      }
 
-        canvas {
-            border: 1px solid black;
-            width: 1024px;
-            height: 256px;
-        }
-
+      canvas {
+        border: 1px solid black;
+        width: 512px;
+        height: 256px;
+      }
+      #permission-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      #permission-overlay button {
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 20px;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div id="permission-overlay">
+      <button>Allow for mic usage</button>
+    </div>
+    Local Tests:
+    <button onclick="fileAnalyze('all')">Play All</button>
+    <button onclick="fileAnalyze('left')">Play Left</button>
+    <button onclick="fileAnalyze('right')">Play Right</button>
+    <button onclick="fileAnalyze('center')">Play Center</button>
+    <hr />
+    Mic Tests:
+    <select id="mic-options"></select>
+    <button onclick="micAnalyze(1)">Grab Mic (mono)</button>
+    <button onclick="micAnalyze(2)">Grab Mic (stereo)</button>
+    <p>Using mic: <span id="captured-mic-name">---</span></p>
+    <hr />
 
-Local Tests:
-<button onclick="fileAnalyze('all')">Play All</button>
-<button onclick="fileAnalyze('left')">Play Left</button>
-<button onclick="fileAnalyze('right')">Play Right</button>
-<button onclick="fileAnalyze('center')">Play Center</button>
-<hr/>
-Mic Tests:
-<button onclick="micAnalyze(1)">Grab Mic (mono)</button>
-<button onclick="micAnalyze(2)">Grab Mic (stereo)</button>
-<hr/>
-
-PeerConnections (all):
-<br/>
-<ul>
-    <li>
+    PeerConnections (all):
+    <br />
+    <ul>
+      <li>
         <button onclick="pcTest('all', false)">all</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('all', true)">all with SDP changes</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('left', false)">left</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('left', true)">left with SDP changes</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('right', false)">right</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('right', true)">right with SDP changes</button>
-    </li>
-    <li>
+      </li>
+      <li>
         <button onclick="pcTest('center', false)">center</button>
-    </li>
-    <li>
-        <button onclick="pcTest('center', true)">center with SDP changes</button>
-    </li>
-</ul>
-<hr/>
+      </li>
+      <li>
+        <button onclick="pcTest('center', true)">
+          center with SDP changes
+        </button>
+      </li>
+    </ul>
+    <hr />
 
-Left:<br/>
-<canvas id="left"></canvas>
+    <div style="display: flex; gap: 20px">
+      <div>
+        Left:<br />
+        <canvas id="left"></canvas>
+      </div>
+      <div>
+        Right: <br />
+        <canvas id="right"></canvas>
+      </div>
+    </div>
 
-<hr/>
-Right: <br/>
-<canvas id="right"></canvas>
+    <script>
+      const leftCanvas = document.getElementById("left");
+      const rightCanvas = document.getElementById("right");
+      const leftCtx = leftCanvas.getContext("2d");
+      const rightCtx = rightCanvas.getContext("2d");
+      const permissionOverlay = document.getElementById("permission-overlay");
+      const micSelect = document.getElementById("mic-options");
 
-<script>
+      // Initialize available audio devices
+      const initAudioDevices = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(
+          (device) => device.kind === "audioinput"
+        );
 
-    const leftCanvas = document.getElementById("left");
-    const rightCanvas = document.getElementById("right");
-    const leftCtx = leftCanvas.getContext("2d");
-    const rightCtx = rightCanvas.getContext("2d");
+        micSelect.innerHTML = audioInputs
+          .map(
+            (device) =>
+              `<option value="${device.deviceId}">${
+                device.label || "Microphone " + device.deviceId.slice(0, 5)
+              }</option>`
+          )
+          .join("");
+      };
 
-    const getMic = (channels) => navigator.mediaDevices.getUserMedia({audio: {channelCount: channels}});
+      // Handle permission button click
+      permissionOverlay
+        .querySelector("button")
+        .addEventListener("click", async () => {
+          try {
+            // Request permissions temporarily
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            // Stop all tracks immediately
+            stream.getTracks().forEach((track) => track.stop());
+            // Hide overlay
+            permissionOverlay.style.display = "none";
+            // Initialize device list
+            await initAudioDevices();
+          } catch (err) {
+            console.error("Error getting microphone permission:", err);
+            alert("Failed to get microphone permission");
+          }
+        });
 
-    getLocalStream = async (side, silent) => {
+      const getMic = (channels) =>
+        navigator.mediaDevices
+          .getUserMedia({
+            audio: {
+              channelCount: channels,
+              deviceId: { exact: micSelect.value },
+            },
+          })
+          .then((stream) => {
+            document.getElementById("captured-mic-name").textContent =
+              stream.getAudioTracks()[0].label;
+            return stream;
+          });
+
+      getLocalStream = async (side, silent) => {
         const audioEl = new Audio(`${side}.wav`);
-        const audioContext = new AudioContext()
-        const source = audioContext.createMediaElementSource(audioEl)
-        source.connect(silent ? source.connect(audioContext.createMediaStreamDestination()) : audioContext.destination)
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaElementSource(audioEl);
+        source.connect(
+          silent
+            ? source.connect(audioContext.createMediaStreamDestination())
+            : audioContext.destination
+        );
         await audioEl.play();
         await audioEl.pause();
         return {
-            stream: audioEl.captureStream(),
-            play: () => audioEl.play(),
-            pause: () => audioEl.pause()
-        }
-    }
+          stream: audioEl.captureStream(),
+          play: () => audioEl.play(),
+          pause: () => audioEl.pause(),
+        };
+      };
 
-    playStream = (stream) => {
+      playStream = (stream) => {
         const newEl = new Audio();
         newEl.srcObject = stream;
         document.body.appendChild(newEl);
         newEl.play();
-    }
+      };
 
-    fileAnalyze = async (side) => {
+      fileAnalyze = async (side) => {
         const str = await getLocalStream(side);
         analyse(str.stream);
         await str.play();
-    }
+      };
 
-    micAnalyze = async (channels) => {
+      micAnalyze = async (channels) => {
         analyse(await getMic(channels));
-    }
+      };
 
-    analyse = (stream) => {
-        console.log('analyse stream', stream);
-        console.log('settings', stream.getTracks()[0].getSettings());
+      analyse = (stream) => {
+        console.log("analyse stream", stream);
+        console.log("settings", stream.getTracks()[0].getSettings());
         window.stream = stream;
 
         const audioContext = new AudioContext();
 
         const input = audioContext.createMediaStreamSource(stream);
         const splitter = audioContext.createChannelSplitter(2),
-            lAnalyser = audioContext.createAnalyser(),
-            rAnalyser = audioContext.createAnalyser();
+          lAnalyser = audioContext.createAnalyser(),
+          rAnalyser = audioContext.createAnalyser();
         input.connect(splitter);
         splitter.connect(lAnalyser, 0, 0);
         splitter.connect(rAnalyser, 1, 0);
         const lArray = new Uint8Array(lAnalyser.frequencyBinCount),
-            rArray = new Uint8Array(rAnalyser.frequencyBinCount);
+          rArray = new Uint8Array(rAnalyser.frequencyBinCount);
         updateAnalyser();
 
         function updateAnalyser() {
-            requestAnimationFrame(updateAnalyser);
-            lAnalyser.getByteFrequencyData(lArray);
-            rAnalyser.getByteFrequencyData(rArray);
-            draw(lArray, rArray);
+          requestAnimationFrame(updateAnalyser);
+          lAnalyser.getByteFrequencyData(lArray);
+          rAnalyser.getByteFrequencyData(rArray);
+          draw(lArray, rArray);
         }
-    }
+      };
 
-    const draw = (left, right) => {
-
+      const draw = (left, right) => {
         leftCtx.clearRect(0, 0, leftCanvas.width, leftCanvas.height);
         rightCtx.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
 
         leftCtx.beginPath();
-        leftCtx.strokeStyle = 'blue';
+        leftCtx.strokeStyle = "blue";
         Object.values(left).forEach((v, index) => {
-            leftCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
-        })
+          leftCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
+        });
         leftCtx.stroke();
 
         rightCtx.beginPath();
-        rightCtx.strokeStyle = 'blue';
+        rightCtx.strokeStyle = "blue";
         Object.values(right).forEach((v, index) => {
-            rightCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
-        })
+          rightCtx.lineTo(index + 1, 128 - Math.floor(v / 2));
+        });
         rightCtx.stroke();
+      };
 
-    }
-
-    pcTest = async (sourceType, sdpChanges) => {
+      pcTest = async (sourceType, sdpChanges) => {
         const pc1 = new RTCPeerConnection();
         const pc2 = new RTCPeerConnection();
-        let onConnected = () => {
-        }
+        let onConnected = () => {};
 
-        pc1.addEventListener('connectionstatechange', () => {
-            console.log('pc1.connectionState', pc1.connectionState);
-            if (pc1.connectionState === "connected") {
-                onConnected();
-            }
+        pc1.addEventListener("connectionstatechange", () => {
+          console.log("pc1.connectionState", pc1.connectionState);
+          if (pc1.connectionState === "connected") {
+            onConnected();
+          }
         });
-        pc1.addEventListener('signalingstatechange', () => {
-            console.log('pc1.signalingState', pc1.signalingState);
+        pc1.addEventListener("signalingstatechange", () => {
+          console.log("pc1.signalingState", pc1.signalingState);
         });
-        pc2.addEventListener('connectionstatechange', () => {
-            console.log('pc2.connectionState', pc2.connectionState);
+        pc2.addEventListener("connectionstatechange", () => {
+          console.log("pc2.connectionState", pc2.connectionState);
         });
-        pc2.addEventListener('signalingstatechange', () => {
-            console.log('pc2.signalingState', pc2.signalingState);
-        });
-
-        pc1.addEventListener('icecandidate', (c) => {
-            pc2.addIceCandidate(c.candidate);
-        })
-        pc2.addEventListener('icecandidate', (c) => {
-            pc1.addIceCandidate(c.candidate);
+        pc2.addEventListener("signalingstatechange", () => {
+          console.log("pc2.signalingState", pc2.signalingState);
         });
 
-        pc2.addEventListener('track', (e) => {
-            playStream(e.streams[0]);
-            analyse(e.streams[0]);
-        })
+        pc1.addEventListener("icecandidate", (c) => {
+          pc2.addIceCandidate(c.candidate);
+        });
+        pc2.addEventListener("icecandidate", (c) => {
+          pc1.addIceCandidate(c.candidate);
+        });
+
+        pc2.addEventListener("track", (e) => {
+          playStream(e.streams[0]);
+          analyse(e.streams[0]);
+        });
 
         let stream = undefined;
-        if (sourceType === 'mic-mono' || sourceType === 'mic-stereo') {
-            stream = await getMic(sourceType === 'mic-mono' ? 1 : 2);
+        if (sourceType === "mic-mono" || sourceType === "mic-stereo") {
+          stream = await getMic(sourceType === "mic-mono" ? 1 : 2);
         } else {
-            const streamWrapper = await getLocalStream(sourceType, true)
-            stream = streamWrapper.stream
-            onConnected = () => streamWrapper.play();
+          const streamWrapper = await getLocalStream(sourceType, true);
+          stream = streamWrapper.stream;
+          onConnected = () => streamWrapper.play();
         }
         console.log(stream.getAudioTracks());
         pc1.addTrack(stream.getAudioTracks()[0], stream);
         const pc1Offer = await pc1.createOffer();
 
         if (sdpChanges) {
-            pc1Offer.sdp = pc1Offer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+          pc1Offer.sdp = pc1Offer.sdp.replace(
+            "useinbandfec=1",
+            "useinbandfec=1; stereo=1"
+          );
         }
-        console.log('pc1Offer', pc1Offer);
+        console.log("pc1Offer", pc1Offer);
 
         await pc1.setLocalDescription(pc1Offer);
 
@@ -210,16 +293,17 @@ Right: <br/>
         const pc2Answer = await pc2.createAnswer();
 
         if (sdpChanges) {
-            pc2Answer.sdp = pc2Answer.sdp.replace("useinbandfec=1", "useinbandfec=1; stereo=1");
+          pc2Answer.sdp = pc2Answer.sdp.replace(
+            "useinbandfec=1",
+            "useinbandfec=1; stereo=1"
+          );
         }
 
-        console.log('pc2Answer', pc2Answer);
+        console.log("pc2Answer", pc2Answer);
         await pc2.setLocalDescription(pc2Answer);
 
         await pc1.setRemoteDescription(pc2Answer);
-
-    }
-
-</script>
-</body>
+      };
+    </script>
+  </body>
 </html>
