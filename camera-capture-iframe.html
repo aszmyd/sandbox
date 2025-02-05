@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <button onclick="start()" id="outside">Start sharing outside</button>
+    <button onclick="start()" id="inside">Start sharing inside</button>
     <br />
     <h2>Output cam:</h2>
     <video
@@ -16,10 +16,6 @@
       muted
     ></video>
     <hr />
-    <iframe
-      src="camera-capture-iframe.html"
-      style="width: 100%; height: 50vh; border: 1px solid red"
-    ></iframe>
     <script>
       start = () => {
         navigator.mediaDevices.getUserMedia({ video: true }).then((src) => {
